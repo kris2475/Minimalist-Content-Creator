@@ -1,113 +1,123 @@
 # ✨ Minimalist-Content-Creator
 
 ## ⚡ Overview
-
-**Minimalist-Content-Creator** is a technical showcase demonstrating how to achieve **precise stylistic control** over Large Language Models (LLMs) using **System Instructions** within the **Gemini API**.
-
-This tool enforces a strict narrative persona — such as a *1950s pulp sci-fi narrator* — and transforms any user input into that selected tone. The goal: prove that LLMs can operate as **directive content engines**, not just conversational agents.
+**Minimalist-Content-Creator** is a technical showcase demonstrating precise stylistic control over Large Language Models (LLMs) using **System Instructions** in the Gemini API. It converts any input into a fixed persona — e.g., a 1950s pulp sci‑fi narrator — proving LLMs can be deterministic content engines, not only chats.
 
 ---
 
 ## ✨ Key Features
-
-- **Persona-Locked Output**  
-  System Instruction ensures the LLM always speaks in the defined style.
-
-- **Predictable Generation**  
-  Content is produced consistently, without drift from the persona rules.
-
-- **Stylised Content Creation**  
-  Converts ordinary user text into themed narrative styles (retro sci-fi, noir, historical, etc.).
-
-- **Lightweight UI**  
-  Minimal interface using **Gradio or Streamlit** for fast testing and demos.
-
-- **True Gemini System-Instruction Integration**  
-  Proper `generateContent` payload structure highlighting System Instruction priority.
+- Persona‑Locked Output  
+- Predictable controlled generation  
+- Retro / Noir / Historical persona modes  
+- Minimal UI (Gradio/Streamlit)  
+- Direct Gemini payload control  
 
 ---
 
 ## 🧠 Architecture & Flow
-
-1. User enters text
-2. Project prepends a multi-line persona and behaviour rule set as **System Instruction**
-3. Sends request to **gemini-2.5-flash-preview-09-2025**
-4. Response is always persona-consistent
-
-This ensures the persona remains locked and output stays aligned with the desired voice.
+1. User input  
+2. System Instruction applied  
+3. Request to `gemini-2.5-flash-preview-09-2025`  
+4. Persona‑consistent output  
 
 ---
 
-## 🚀 Installation & Setup
-
-### ✅ Prerequisites
-
-- Python **3.8+**
-- **Gemini API Key** (Google AI Studio)
-
----
-
-### 📦 Clone Repository
-
+## 🚀 Setup
 ```bash
 git clone https://github.com/your-username/minimalist-content-creator.git
 cd minimalist-content-creator
-```
-
----
-
-### 🧩 Install Dependencies
-
-```bash
 pip install google-genai gradio
 ```
 
-> *(Use Streamlit instead if desired)*
-
----
-
-### 🔑 Add API Key
-
-Create `.env`:
-
+`.env`:
 ```bash
 GEMINI_API_KEY="YOUR_API_KEY_HERE"
 ```
 
-(or export via environment variable)
-
----
-
-## ▶️ Run the App
-
+Run:
 ```bash
 python orchestrator_app.py
 ```
 
-Then visit the local app URL (e.g. `http://127.0.0.1:7860`).
+---
+
+## 🎭 Demo Prompt
+**Input:** Explain a toaster.  
+**Output:**  
+*In the chromium‑gleam kitchens of tomorrow‑yesteryear, crackling coils forge bread into rocket‑fuel for cosmic dreamers…*
 
 ---
 
-## 🎭 Example Test Prompt
+## 🛠️ Technical Deep Dive: `Minimalist-Content-Creator.py`
 
-> Explain what a toaster does.
-
-Example output tone you might expect:
-
-> *In the gleaming kitchens of tomorrow-yesterday, brave coils of fire singe humble bread into golden sustenance for star-faring dreamers…*
+### Architectural Overview
+| Component | Purpose | Concept |
+|---|---|---|
+| `main()` | CLI + input loop | Interface |
+| `os.getenv()` | Load credentials | Security |
+| `generate_content()` | Build request + call API | Wrapper |
+| Retry loop | Auto retry | Exponential Backoff |
 
 ---
 
-## 📂 Purpose
+### Key Configuration
+| Constant | Value | Purpose |
+|---|---|---|
+| `MODEL_NAME` | `gemini-2.5-flash-preview-09-2025` | Fast persona LLM |
+| `SYSTEM_PROMPT` | Persona rules | Enforce style |
 
-This project serves as a **reference implementation** of:
+---
 
-- system-anchored LLM behaviour control  
-- persona-based content pipelines  
-- deterministic, stylised generation workflows  
+### Authentication
+```python
+api_key = os.getenv("GEMINI_API_KEY")
+```
+✔ avoids leaking secrets
+
+---
+
+### Payload
+```python
+payload = {
+    "contents": [{"parts": [{"text": user_query}]}],
+    "systemInstruction": {"parts": [{"text": SYSTEM_PROMPT}]},
+    "tools": [{"google_search": {} }],
+}
+```
+
+- `systemInstruction` = persona lock  
+- `google_search` = real info grounding  
+
+---
+
+### Exponential Backoff
+```python
+MAX_RETRIES = 5
+delay = BASE_DELAY * (2 ** attempt)
+```
+
+✔ avoids overloading API  
+✔ handles 429/500/503  
+
+---
+
+### Response Parsing
+```python
+text = data.get("candidates",[{}])[0]\
+       .get("content",{}).get("parts",[{}])[0]\
+       .get("text")
+```
+
+Extracts useful output only.
+
+---
+
+### CLI Flow
+- prints persona info  
+- loops for user prompts  
+- `Ctrl+C` exits safely  
 
 ---
 
 ## 📜 License
-
-MIT License — build, tweak, and explore freely 🤝
+MIT License
